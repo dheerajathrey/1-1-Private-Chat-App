@@ -21,13 +21,15 @@ app.get('/', function(req, res){
 // console.log('flag1')
 
 
-
-
 // console.log('flag2')
 
 userList = []
 connectionList = []
 // console.log('flag3')
+
+var idNo = 1
+
+var userIdDict = {}
 
 io.sockets.on('connection', function(socket) {
 	// console.log('flag4')
@@ -38,7 +40,7 @@ io.sockets.on('connection', function(socket) {
 	socket.on('disconnect', function(data){
 		// if(!socket.username) return;
 		userList.splice(userList.indexOf(socket.username), 1)
-		updateUsernames()
+		updateUsernames("d")
 
 		var socketIndex = connectionList.indexOf(socket)
 		connectionList.splice(socketIndex, 1)
@@ -47,21 +49,30 @@ io.sockets.on('connection', function(socket) {
 
 	socket.on('send message', function(data){
 		// console.log(data)
-		io.sockets.emit('new message', {user: socket.username, message: data});
+		io.sockets.emit('new message', data);
 	});
 
 
 
 	socket.on('new user', function(data, callback){
 		callback(true);
+
+		userIdDict[data] = idNo
+		io.sockets.emit('update idNo', {id : idNo, userDict : userIdDict})
+		idNo++
+
+		console.log("userIdDict " + userIdDict)
+		console.log('hi')
+		console.log(data)
 		socket.username = data;
 		userList.push(socket.username)
-		updateUsernames()
+		console.log('lenght of data ' + userList.length)
+		updateUsernames("n")
 
 	})
 
-	function updateUsernames() {
-		io.sockets.emit('get users', userList)	
+	function updateUsernames(k) {
+		io.sockets.emit('get users', {list: userList, val: k})	
 	};
 
 });

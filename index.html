@@ -1,128 +1,3 @@
- <!-- <!DOCTYPE html> -->
-<!--<html>
-<head>
-	<title>Hello</title>
-
-	<script s rc="/socket.io/socket.io.js"></script>
-
-	<style type="text/css">
-		.sendbutton {
-		    background-color: #0000FF; /* Green */
-		    border: none;
-		    color: white;
-		    padding: 15px 32px;
-		    text-align: center;
-		    text-decoration: none;
-		    display: inline-block;
-		    font-size: 16px;
-		}
-	</style>
-</head>
-
-<body>
-	<h2>Welcome User!</h2> -->
-
-	<!-- <div class="c1"> -->
-		<!-- <form id="message-id">
-			<label>Write your message here!</label>
-			<br>
-			<br>
-			<br>
-
-
-			<textarea rows="5" cols="70" class="form-control" id="message"></textarea>
-			<br>
-			<br>
-			<br>
-
-			<input type="submit" value="Send" class="sendbutton">
-
-		</form> -->
-
-<!-- 		<textarea ></textarea -->
-	<!-- </div> -->
-
-<!-- <script type="text/javascript">
-	$(function(){
-		var socket = io.connect()
-
-	});
-</script>
-
-</body>
-</html> -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- 
-<html>
-<head>
-	<title>IO chat</title>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
-	<script src="/socket.io/socket.io.js"></script>
-	<style >
-		body{
-			margin-top:30px; 
-		}
-	</style>
-</head>
-<body>
-	<div class="container">
-		<div class="row">
-			<div class="col-md-4">
-				<div class="well">
-					<h3>Online Users</h3>
-					<ul class="list-group" id="users"></ul>
-				</div>
-			</div>
-			<div class="col-md-8">
-				<div class="chat" id="chat-id"></div>
-				<form id="form-id">
-					<div class="form-group">
-							<label>Enter Message</label>
-							<textarea class="form-control id="message-id"></textarea>
-							<br />
-							<input type="submit" class="btn btn-primary" value="Send Message"/>
-					</div>
-				</form>
-			</div>
-		</div>	
-	</div>
-	<script>
-		$(function(){
-			var socket= io.connect();
-
-			var $form = $('#form-id');
-			var $message = $('#message-id');
-			var $chat = $('#chat-id');
-
-			$form.submit(function(e){
-				e.preventDefault()
-				// console.log("Message submitted")
-				socket.emit('send message', $message.val())
-				$message.val("")
-			})
-			
-		});
-	</script>
-</body>
-</html> -->
-
-
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -133,13 +8,35 @@
 	<script src="/socket.io/socket.io.js"></script>
 
 	<style>
-		body{
-			margin-top:30px;
-		}
 
-		#messageArea{
-			display: none;
-		}
+	.button {
+	    background-color: #4CAF50;
+	    border: none;
+	    color: white;
+	    padding: 15px 25px;
+	    text-align: center;
+	    font-size: 16px;
+	    cursor: pointer;
+	}
+
+	.button1 {
+	    background-color: #FF0000;
+	    border: none;
+	    color: white;
+	    padding: 15px 25px;
+	    text-align: center;
+	    font-size: 16px;
+	    cursor: pointer;
+	}
+
+	#messageArea{
+		display: none;
+	}
+
+
+	body{
+		margin-top:30px;
+	}
 	</style>
 </head>
 <body>
@@ -166,14 +63,18 @@
 				<div id="curr-user-id"></div>
 				<br/>
 				<div class="well">
-					<h3>Online users</h3>
+					<!-- <h3>Online users</h3> -->
+					<div id = "talking-to-tag"></div>
 					<div id="number-online-id"></div>
-					<ul class="list-group" id="users-id"></ul>
+					<!-- <ul class="list-group" id="users-id"></ul> -->
+					<div class="btn-group" id = "users-id"></div>
 				</div>
 			</div>
 
 			<div class="col-md-8">
 				<div class="chat" id='chat-id'></div>
+				<div id = "chat-list-id"></div>
+
 
 				<form id="form-id">
 					<div class="form-group">
@@ -188,34 +89,71 @@
 	</div>
 
 	<script type="text/javascript">
+		var count = 0
+		var idNo 
+		var userIdDict
+		var buttonClickedId = "-1"
 
 		$(function(){
 			var socket = io.connect()
 			var currUser;
-			// var $form = $("#form-id")
-			// var $message = $("#message-id")
-			// var $chat = $("#chat-id")
 
-			$("#form-id").submit(function(event){
+			$("#form-id").submit(function(event) {
 				event.preventDefault();
 				// console.log('submitted')
-				socket.emit('send message', $("#message-id").val())
-				$("#message-id").val("")
+				if(buttonClickedId!="-1") {
+					socket.emit('send message', {message : $("#message-id").val(), senderUid : userIdDict[currUser], recieverUid : buttonClickedId, user : currUser })
+					$("#message-id").val("")
+				} else {
+					alert("Choose a friend!")
+				}
+			})
+
+			socket.on('update idNo', function(data){
+				if(count==0) {
+					count+=1
+					idNo=data.id
+				}
+
+				userIdDict = data.userDict				
 			})
 
 
 			socket.on('new message', function(data){
-				var chatDataInHTMLText = '<div class="well"><strong>' + data.user + '</strong>: ' + data.message + '</div>';
-				$("#chat-id").append(chatDataInHTMLText)
+				var chatDataInHTMLText = "<div class='well'><strong>" + data.user + "</strong>: " + data.message + "</div>";
+
+				if(data.senderUid == userIdDict[currUser] && data.recieverUid==userIdDict[currUser]){
+					$("#chat-id-" + data.recieverUid).append(chatDataInHTMLText)	
+				}
+				else{
+					if(data.senderUid == userIdDict[currUser]) {
+						console.log(data.senderUid + " to " + data.recieverUid + " "+ data.message)
+						$("#chat-id-" + data.recieverUid).append(chatDataInHTMLText)
+						console.log('ff1')
+					}
+					if(data.recieverUid==userIdDict[currUser]) {
+						console.log(data.recieverUid)
+						console.log('ff2')
+						$("#chat-id-" + data.senderUid).append(chatDataInHTMLText)
+						$("#button-" + data.senderUid).attr('class', 'button1')
+					}
+				}
+				// $("#chat-id").append(chatDataInHTMLText)
 			})
 
+
 			$('#user-form-id').submit(function(event){
-				console.log('flag1');
+				// console.log('flag1');
 				event.preventDefault()
+
 				currUser=$('#username-id').val();
-				socket.emit('new user', $('#username-id').val(), function(data){
+				// console.log('inside submit' + currUser)
+				// userIdDict[currUser] = idNo
+				// idNo=idNo+1
+
+				socket.emit('new user', currUser, function(data){
 					if(data) {
-						$("#curr-user-id").html("Welcome! <h2>" + currUser + "</h2>")
+						$("#curr-user-id").html("<h2>Welcome! " + currUser + "</h2>")
 						$('#user-form-id').hide()
 						$('#messageArea').show()
 					}
@@ -225,13 +163,60 @@
 				$('#username-id').val("")
 			})
 
+
+
+			console.log("f1")
+			var buttonGroup = document.querySelector('div.btn-group');
+			 // for (var l = 0; l < buttonGroup.length; l++) {
+		 	console.log("f2")
+		 	buttonGroup.addEventListener('click', function(e){
+		 		// console.log("f3")
+		 		console.log("button clicked " + e.target.id)
+		 		buttonClickedId = (e.target.id).substring((e.target.id).lastIndexOf("-") + 1);
+		 		$("#button-"+buttonClickedId).attr('class','button')
+		 		console.log(buttonClickedId)
+
+		 		for(var i in userIdDict)
+		 		{
+		 			if (userIdDict[i]==buttonClickedId) {
+		 				console.log('entered for and show ' + userIdDict[i])
+		 				$("#talking-to-tag").html("<h3>Talking to "+ i + "</h3></br>")
+		 				$("#chat-id-" + buttonClickedId).show()
+		 			}
+		 			else{
+		 				console.log('hide ' + userIdDict[i])
+		 				$("#chat-id-" + userIdDict[i]).hide()
+		 			}
+		 		}
+		 		// $("#talking-to-tag").html("Talking to " + Object.keys(userIdDict).find(key => userIdDict[key] === buttonClickedId))
+		 	})
+			 // }
+			console.log("f4")
+
+
 			socket.on('get users', function(data) {
 				var htmlString = ""
-				for(i=0;i<data.length;i++) {
-					htmlString+="<li class='list-group-item'>"+ data[i] + "</li>";
+				var divHtmlString=""
+				var str = ""
+				var k = data.list.length
+				// console.log('data' + data)
+				for(i=0;i<k;i++) {
+					// htmlString+="<li class='list-group-item'>"+ data[i] + "</li>";
+					// console.log("indiv " + userIdDict[data[i]])
+					htmlString += "<button class='button' type='button' id='button-"+ userIdDict[data.list[i]] + "'>" + data.list[i] +"</button></br>"
+					str += "<div class = 'chat' id = 'chat-id-" + (userIdDict[data.list[i]]).toString() + "'></div></br>"
+					// console.log(htmlString)
 				}
-				$("#number-online-id").html(data.length + " people online")
+				$("#number-online-id").html("<h2>Online users: "+k + "</h2></br>")
 				$("#users-id").html(htmlString)
+				divHtmlString = "<div class = 'chat' id = 'chat-id-" + (userIdDict[data.list[k-1]]).toString() + "'></div></br>"
+				
+				if(currUser==data.list[k-1] && data.val=='n')
+				{
+					$("#chat-list-id").html(str)	
+				}else {
+					$("#chat-list-id").append(divHtmlString)
+				}
 			})
 		})
 	</script>
